@@ -181,6 +181,10 @@ extension MediaPlayerItem {
             }
         }
 
+        if !secondary, index >= 0 {
+            SubtitlePreference.record(language: subtitleStreams.first { $0.index == index }?.language)
+        }
+
         replaySubtitles?.end(apply: false)
         configuration.selectTracks(subtitle: selectedSubtitleStreamIndex ?? -1)
         configuration.disabledSubtitleTracks = .init(primary: primaryIndex, secondary: secondaryIndex)
@@ -204,10 +208,41 @@ extension MediaPlayerItem {
                 primaryIndex = defaultSubtitleTrackIndex
             }
 
+            SubtitlePreference.record(
+                enabled: true,
+                language: subtitleStreams.first { $0.index == primaryIndex }?.language
+            )
+
             selectTracks(subtitle: primaryIndex, secondary: secondaryIndex)
         } else {
+            SubtitlePreference.record(enabled: false)
+
             configuration.disabledSubtitleTracks = .init(primary: primaryIndex, secondary: secondaryIndex)
             selectTracks(subtitle: -1, secondary: -1)
         }
+    }
+
+    /// Re-applies the last subtitle choice, for example when the next episode starts.
+    func restoreSubtitlePreference() {
+        guard canSelectTracks, let wantsSubtitles = SubtitlePreference.isEnabled else { return }
+
+        guard wantsSubtitles else {
+            setSubtitlesEnabled(false)
+            return
+        }
+
+        let candidates = subtitleStreams.filter { ($0.index ?? -1) >= 0 }
+        guard candidates.isNotEmpty else { return }
+
+        if let language = SubtitlePreference.language {
+            let sameLanguage = candidates.filter { $0.language == language }
+            let match = sameLanguage.first { $0.isForced != true } ?? sameLanguage.first
+
+            if let match, let index = match.index, subtitleTrackIndex(secondary: false) != index {
+                setSubtitleTrack(index: index, secondary: false)
+            }
+        }
+
+        setSubtitlesEnabled(true)
     }
 }

@@ -38,11 +38,11 @@ extension ItemView {
             let defaultFocusedButton = provider.item.presentPlayButton ?
                 ItemView.Component.play : visible.first?.id ?? ItemView.Component.menu
 
-            VStack(alignment: alignment, spacing: viewLayout.value(standard: 8, large: 24)) {
+            VStack(alignment: alignment, spacing: ItemView.Typography.buttonSpacing(viewLayout)) {
                 if provider.item.presentPlayButton {
                     PlayButton(provider: provider)
                         .coordinatedFocus(ItemView.Component.play, selection: $focusedButton)
-                        .frame(height: viewLayout.controlHeight)
+                        .frame(height: ItemView.Typography.controlHeight(viewLayout))
                 }
 
                 ItemActionButtons(

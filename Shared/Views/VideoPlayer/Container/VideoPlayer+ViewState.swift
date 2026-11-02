@@ -372,6 +372,7 @@ extension VideoPlayer {
 
         private let timer: PokeIntervalTimer
         private var interactions: Set<Interaction> = []
+        private var interactionDates: [Interaction: Date] = [:]
         @ObservationIgnored
         private var cancellables: Set<AnyCancellable> = []
         @ObservationIgnored
@@ -381,6 +382,17 @@ extension VideoPlayer {
         var panHandlingAction: any _PanHandlingAction?
         var didSwipe: Bool = false
         var lastTapLocation: CGPoint?
+
+        @ObservationIgnored
+        var lastPointerLocation: CGPoint?
+        /// After the controls are dismissed from the keyboard, small pointer movements don't bring them back.
+        @ObservationIgnored
+        var pointerRevealAnchor: CGPoint?
+
+        func dismissControlsFromKeyboard() {
+            hideControls()
+            pointerRevealAnchor = lastPointerLocation
+        }
 
         func cancelTapGesture() {
             lastTapLocation = nil
@@ -627,20 +639,57 @@ extension VideoPlayer {
         func setInteraction(_ interaction: Interaction, active: Bool) {
             if active {
                 interactions.insert(interaction)
+                interactionDates[interaction] = .now
             } else {
                 interactions.remove(interaction)
+                interactionDates[interaction] = nil
             }
 
             refreshAutoDismiss()
+        }
+
+        /// Initial loading can take a while, so on Mac the controls hide on their usual timer.
+        private var isActivityAllowingAutoDismiss: Bool {
+            #if targetEnvironment(macCatalyst)
+            mediaSession?.activity == nil || mediaSession?.activity == .loading
+            #else
+            mediaSession?.activity == nil
+            #endif
+        }
+
+        /// A pressed menu can fail to report that it closed, so on Mac only recent interactions hold the controls.
+        private var blockingInteractions: Set<Interaction> {
+            #if targetEnvironment(macCatalyst)
+            interactions.filter { interaction in
+                switch interaction {
+                case .button:
+                    false
+                case .menu:
+                    Date.now.timeIntervalSince(interactionDates[interaction] ?? .distantPast) < 15
+                default:
+                    true
+                }
+            }
+            #else
+            interactions
+            #endif
+        }
+
+        private var isPlaybackStateAllowingAutoDismiss: Bool {
+            #if targetEnvironment(macCatalyst)
+            true
+            #else
+            mediaSession?.playbackRequestStatus != .paused
+            #endif
         }
 
         private var canAutoDismiss: Bool {
             guard presentation != .hidden,
                   !isScrubbing,
                   !isPresentingSupplement,
-                  interactions.isEmpty,
-                  mediaSession?.activity == nil,
-                  mediaSession?.playbackRequestStatus != .paused else { return false }
+                  blockingInteractions.isEmpty,
+                  isActivityAllowingAutoDismiss,
+                  isPlaybackStateAllowingAutoDismiss else { return false }
 
             #if os(tvOS)
             // Menus take focus out of the player, including nested system menus.
@@ -658,6 +707,8 @@ extension VideoPlayer {
             #if os(tvOS)
             // Short interval for progress only
             presentation == .progress ? 2 : 10
+            #elseif targetEnvironment(macCatalyst)
+            3
             #else
             5
             #endif

@@ -63,7 +63,11 @@ extension TabItem {
             title: provider.displayTitle,
             systemImage: "house.fill"
         ) {
+            #if targetEnvironment(macCatalyst)
+            MacHomeView(provider: provider)
+            #else
             ContentGroupView(provider: provider)
+            #endif
         }
     }
 

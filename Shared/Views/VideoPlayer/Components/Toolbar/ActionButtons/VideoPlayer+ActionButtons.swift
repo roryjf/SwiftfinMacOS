@@ -52,6 +52,10 @@ extension VideoPlayer.PlaybackControls.Toolbar {
                 filteredButtons.removeAll { $0 == .aspectFill || $0 == .pictureInPicture }
             }
 
+            #if targetEnvironment(macCatalyst)
+            filteredButtons.removeAll(equalTo: .autoPlay)
+            #endif
+
             if mediaSession.playbackItem?.audioStreams.isEmpty == true {
                 filteredButtons.removeAll { $0 == .audio || $0 == .audioOffset }
             }
@@ -84,11 +88,21 @@ extension VideoPlayer.PlaybackControls.Toolbar {
         }
 
         private var barActionButtons: [VideoPlayerActionButton] {
-            resolvedActionButtons(rawBarActionButtons)
+            #if targetEnvironment(macCatalyst)
+            // Full screen has its own button, so aspect fill lives in the overflow menu.
+            return resolvedActionButtons(rawBarActionButtons).filter { $0 != .aspectFill }
+            #else
+            return resolvedActionButtons(rawBarActionButtons)
+            #endif
         }
 
         private var menuActionButtons: [VideoPlayerActionButton] {
-            resolvedActionButtons(rawMenuActionButtons)
+            #if targetEnvironment(macCatalyst)
+            let raw = rawMenuActionButtons.contains(.aspectFill) ? rawMenuActionButtons : rawMenuActionButtons + [.aspectFill]
+            return resolvedActionButtons(raw)
+            #else
+            return resolvedActionButtons(rawMenuActionButtons)
+            #endif
         }
 
         private var menuSystemImage: String {
@@ -130,7 +144,11 @@ extension VideoPlayer.PlaybackControls.Toolbar {
             case .gestureLock:
                 GestureLock()
             case .playbackDestination:
+                #if targetEnvironment(macCatalyst)
+                EmptyView()
+                #else
                 PlaybackDestination()
+                #endif
             #endif
             case .subtitleOffset:
                 SubtitleOffset()
@@ -165,6 +183,14 @@ extension VideoPlayer.PlaybackControls.Toolbar {
 
         private var regularView: some View {
             HStack(spacing: viewLayout.toolbarButtonSpacing) {
+                #if targetEnvironment(macCatalyst)
+                VideoPlayer.PlaybackControls.VolumeButton()
+                    .frame(width: viewLayout.toolbarButtonSize, height: viewLayout.toolbarButtonSize)
+
+                SubtitleToggle()
+                    .frame(width: viewLayout.toolbarButtonSize, height: viewLayout.toolbarButtonSize)
+                #endif
+
                 ForEach(barActionButtons) { button in
                     view(for: button)
                         .frame(width: viewLayout.toolbarButtonSize, height: viewLayout.toolbarButtonSize)

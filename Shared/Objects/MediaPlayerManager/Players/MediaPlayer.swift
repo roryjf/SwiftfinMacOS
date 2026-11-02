@@ -80,6 +80,17 @@ protocol MediaPlayerMetadataProviding {
 }
 
 @MainActor
+protocol MediaPlayerVolumeProviding {
+
+    /// Linear volume in `0 ... 1`.
+    var volume: Double { get }
+    var isMuted: Bool { get }
+
+    func setVolume(_ volume: Double)
+    func setMuted(_ muted: Bool)
+}
+
+@MainActor
 protocol MediaPlayerOffsetProviding {
 
     func setOffset(_ seconds: Duration, for type: MediaStreamType)

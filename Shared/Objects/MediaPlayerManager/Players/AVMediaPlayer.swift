@@ -683,3 +683,22 @@ extension AVMediaPlayer: MediaPlayerSubtitleCueProviding, @preconcurrency AVPlay
         loadedItem?.replaySubtitles?.refresh()
     }
 }
+
+extension AVMediaPlayer: MediaPlayerVolumeProviding {
+
+    var volume: Double {
+        Double(player.volume)
+    }
+
+    var isMuted: Bool {
+        player.isMuted
+    }
+
+    func setVolume(_ volume: Double) {
+        player.volume = Float(min(max(volume, 0), 1))
+    }
+
+    func setMuted(_ muted: Bool) {
+        player.isMuted = muted
+    }
+}

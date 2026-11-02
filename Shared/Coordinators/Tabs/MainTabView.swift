@@ -31,7 +31,12 @@ struct MainTabView: View {
     }
 
     private static var defaultTabCoordinator: TabCoordinator {
-        #if os(iOS)
+        #if targetEnvironment(macCatalyst)
+        // Search lives in the toolbar and media libraries at the top of home.
+        TabCoordinator {
+            TabItem.contentGroup(provider: DefaultContentGroupProvider())
+        }
+        #elseif os(iOS)
         TabCoordinator {
             TabItem.contentGroup(provider: DefaultContentGroupProvider())
             TabItem.search
@@ -128,8 +133,19 @@ struct MainTabView: View {
         #endif
     }
 
-    var body: some View {
+    @ViewBuilder
+    private var content: some View {
+        #if targetEnvironment(macCatalyst)
+        if let tab = tabCoordinator.tabs.first {
+            tabRoot(tab)
+        }
+        #else
         tabContent()
+        #endif
+    }
+
+    var body: some View {
+        content
             .onChange(of: userSessionManager.pendingDeepLink) {
                 routePendingDeepLink(userSessionManager.consumePendingDeepLink())
             }

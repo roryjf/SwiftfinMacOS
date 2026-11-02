@@ -56,9 +56,14 @@ extension VideoPlayer.PlaybackControls {
                 TitleView(item: mediaSession.item)
                     .frame(maxWidth: .infinity, alignment: .leading)
 
+                #if targetEnvironment(macCatalyst)
+                FullScreenButton()
+                    .padding(.horizontal)
+                #else
                 ActionButtons()
                     .frame(height: viewLayout.toolbarButtonSize)
                     .padding(.horizontal)
+                #endif
             }
         }
 
@@ -90,7 +95,12 @@ extension VideoPlayer.PlaybackControls.Toolbar {
 
         private var _titleSubtitle: (title: String, subtitle: String?) {
             if item.type == .episode, let parentTitle = item.parentTitle {
-                return (title: parentTitle, subtitle: item.seasonEpisodeLabel)
+                let subtitle = [item.seasonEpisodeLabel, item.displayTitle]
+                    .compactMap { $0 }
+                    .filter { !$0.isEmpty }
+                    .joined(separator: " · ")
+
+                return (title: parentTitle, subtitle: subtitle.isEmpty ? nil : subtitle)
             }
 
             return (title: item.displayTitle, subtitle: nil)

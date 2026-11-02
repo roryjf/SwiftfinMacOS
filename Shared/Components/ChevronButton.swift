@@ -37,6 +37,7 @@ struct ChevronButton<Label: View>: View {
             }
         }
         .foregroundStyle(.primary, .secondary)
+        .hoverHighlight()
     }
 }
 

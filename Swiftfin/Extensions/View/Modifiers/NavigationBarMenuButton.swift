@@ -57,6 +57,9 @@ struct NavigationBarMenuButtonModifier<MenuContent: View>: ViewModifier {
                             }
                         }
                         .labelStyle(.iconOnly)
+                        #if targetEnvironment(macCatalyst)
+                        .menuIndicator(.hidden)
+                        #endif
                         .fontWeight(.semibold)
                         .foregroundStyle(accentColor)
                     }

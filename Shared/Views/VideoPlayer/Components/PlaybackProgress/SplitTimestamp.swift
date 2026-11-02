@@ -139,6 +139,7 @@ extension VideoPlayer.PlaybackControls {
                 } label: {
                     leadingTimestamp
                 }
+                .buttonStyle(.plain)
                 .foregroundStyle(.primary, .secondary)
 
                 Spacer()
@@ -153,6 +154,7 @@ extension VideoPlayer.PlaybackControls {
                 } label: {
                     trailingTimestamp
                 }
+                .buttonStyle(.plain)
                 .foregroundStyle(.primary, .secondary)
             }
             .font(.caption2)

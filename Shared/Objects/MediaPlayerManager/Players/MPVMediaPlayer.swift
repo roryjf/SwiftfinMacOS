@@ -524,3 +524,22 @@ extension MPVMediaPlayer: MediaPlayerSubtitleCueProviding {
         })
     }
 }
+
+extension MPVMediaPlayer: MediaPlayerVolumeProviding {
+
+    var volume: Double {
+        player.volume / 100
+    }
+
+    var isMuted: Bool {
+        player.isMuted
+    }
+
+    func setVolume(_ volume: Double) {
+        player.setVolume(min(max(volume, 0), 1) * 100)
+    }
+
+    func setMuted(_ muted: Bool) {
+        player.setMuted(muted)
+    }
+}

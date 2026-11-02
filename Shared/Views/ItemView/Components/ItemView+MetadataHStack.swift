@@ -34,7 +34,7 @@ extension ItemView {
                     Text(seasonEpisodeLabel)
                 }
             }
-            .font(.caption)
+            .font(ItemView.Typography.metadata)
             .fontWeight(.semibold)
             .foregroundStyle(.secondary)
         }

@@ -23,6 +23,9 @@ extension VideoPlayer {
         @Environment(MediaSession.self)
         private var mediaSession
 
+        @State
+        private var volumeController = VolumeController()
+
         private var isScrubbing: Bool {
             viewState.isScrubbing
         }
@@ -35,6 +38,29 @@ extension VideoPlayer {
                     alignment: .top
                 )
                 .allowsHitTesting(viewState.visibleElements.contains(.supplements))
+                .environment(volumeController)
+        }
+
+        private var progressContent: some View {
+            VStack(spacing: 0) {
+                PlaybackProgress()
+
+                #if targetEnvironment(macCatalyst)
+                // With supplements, the bar shares their row instead.
+                if viewState.supplements.isEmpty {
+                    BottomActionBar()
+                        .padding(.top, 4)
+                }
+                #endif
+            }
+            .environment(volumeController)
+        }
+
+        /// Changes once per item, when its tracks first become selectable.
+        private var subtitleRestoreKey: String? {
+            guard mediaSession.canControlPlayback, let id = mediaSession.playbackItem?.baseItem.id else { return nil }
+
+            return id
         }
 
         // MARK: body
@@ -57,7 +83,7 @@ extension VideoPlayer {
                     .isVisible(viewState.visibleElements.contains(.playbackButtons))
                     .enabled(viewState.visibleElements.contains(.playbackButtons))
             } progress: {
-                PlaybackProgress()
+                progressContent
                     .isVisible(viewState.isPresentingProgress)
                     .enabled(viewState.isPresentingProgress)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -84,12 +110,39 @@ extension VideoPlayer {
                         .transition(.offset(y: -20).combined(with: .opacity))
                 }
             }
-            .environmentObject(viewState.toastProxy)
             .modifier(VideoPlayer.KeyCommandsModifier())
+            .overlay {
+                ZStack {
+                    VolumeIndicator()
+                    VolumeSliderOverlay()
+                }
+            }
+            .environmentObject(viewState.toastProxy)
+            .environment(volumeController)
+            .onChange(of: subtitleRestoreKey, initial: true) {
+                guard subtitleRestoreKey != nil else { return }
+
+                mediaSession.playbackItem?.restoreSubtitlePreference()
+            }
+            .onChange(of: mediaSession.player.map { ObjectIdentifier($0) }, initial: true) {
+                // Players are created per item, so the remembered volume is re-applied.
+                volumeController.apply(to: mediaSession)
+            }
             .animation(.linear(duration: 0.1), value: isScrubbing)
             .animation(.bouncy(duration: 0.25), value: viewState.presentation)
             .animation(.easeInOut(duration: 0.2), value: viewState.toastProxy.isPresenting)
             .disabled(mediaSession.state == .error)
+            #if targetEnvironment(macCatalyst)
+            .overlay {
+                if mediaSession.activity == .loading, !viewState.isPresentingControls {
+                    ProgressView()
+                        .progressViewStyle(.circular)
+                        .controlSize(.large)
+                        .tint(.white)
+                        .allowsHitTesting(false)
+                }
+            }
+            #endif
         }
     }
 }

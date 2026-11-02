@@ -35,6 +35,7 @@ struct ExperimentalSettingsView: View {
 
             #if os(iOS)
             Toggle("Auto switch connection", isOn: $isServerConnectionAutoSwitchEnabled)
+            #if !targetEnvironment(macCatalyst)
             Toggle("Chromecast", isOn: $isChromecastEnabled)
                 .onChange(of: isChromecastEnabled) {
                     if isChromecastEnabled,
@@ -45,6 +46,7 @@ struct ExperimentalSettingsView: View {
                     }
                     ChromecastController.updateAvailability()
                 }
+            #endif
             #endif
 
             // swiftlint:enable hard_coded_display_string

@@ -72,6 +72,7 @@ extension VideoPlayer.PlaybackControls {
 
         func makeBody(configuration: Configuration) -> some View {
             styledLabel(configuration)
+                .hoverHighlight(Circle(), tint: .white, opacity: 0.25)
                 .onChange(of: configuration.isPressed) {
                     // Button menus remain pressed through their nested menu hierarchy.
                     viewState.setInteraction(interaction, active: configuration.isPressed)

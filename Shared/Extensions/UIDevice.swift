@@ -15,7 +15,7 @@ extension UIDevice {
     }
 
     static var isPad: Bool {
-        current.userInterfaceIdiom == .pad
+        current.userInterfaceIdiom == .pad || current.userInterfaceIdiom == .mac
     }
 
     static var isPhone: Bool {

@@ -24,11 +24,16 @@ extension VideoPlayer.PlaybackControls.Toolbar.ActionButtons {
         private var profiles = CaptionProfile.availableForCurrentPlatform
 
         private var systemImage: String {
+            #if targetEnvironment(macCatalyst)
+            // The captions icon belongs to the on/off toggle.
+            return "ellipsis.bubble"
+            #else
             if mediaSession.playbackItem?.subtitlesEnabled == true {
                 VideoPlayerActionButton.subtitles.systemImage
             } else {
                 VideoPlayerActionButton.subtitles.secondarySystemImage
             }
+            #endif
         }
 
         var body: some View {

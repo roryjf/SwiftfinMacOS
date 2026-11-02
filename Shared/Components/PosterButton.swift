@@ -61,6 +61,7 @@ struct PosterButton<Item: Poster>: View {
         .matchedTransitionSource(id: "item", in: namespace)
         .subtleShadow()
         .hoverEffect(.highlight)
+        .hoverHighlight(RoundedRectangle(cornerRadius: 8), tint: .white, opacity: 0.15)
     }
 
     private func buttonLabel(overlay: some View = EmptyView()) -> some View {

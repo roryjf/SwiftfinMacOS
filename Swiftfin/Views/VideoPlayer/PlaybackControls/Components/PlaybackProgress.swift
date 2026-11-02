@@ -44,6 +44,8 @@ extension VideoPlayer.PlaybackControls {
 
         @Environment(ViewState.self)
         private var viewState
+        @Environment(VolumeController.self)
+        private var volume: VolumeController?
         @Environment(\.accessibilityReduceMotion)
         private var reduceMotion
         @Environment(MediaSession.self)
@@ -184,8 +186,18 @@ extension VideoPlayer.PlaybackControls {
                     liveIndicator
                         .frame(maxWidth: .infinity, alignment: .leading)
                 } else {
+                    #if targetEnvironment(macCatalyst)
                     capsuleSlider
                         .trackingSize($sliderSize)
+                        .padding(.vertical, 8)
+                        .contentShape(Rectangle())
+                        .modifier(HoverScrubModifier(inset: 8, width: sliderSize.width))
+                        .allowsHitTesting(!(volume?.isSliderOpen ?? false))
+                        .padding(.vertical, -8)
+                    #else
+                    capsuleSlider
+                        .trackingSize($sliderSize)
+                    #endif
 
                     SplitTimeStamp()
                         .offset(y: isScrubbing ? 5 : 0)

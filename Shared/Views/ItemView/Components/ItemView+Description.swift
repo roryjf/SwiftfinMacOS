@@ -40,14 +40,14 @@ extension ItemView {
                                 router.route(to: .itemOverview(item: item))
                             } label: {
                                 SeeMoreText(itemOverview)
-                                    .font(.footnote)
-                                    .lineLimit(3)
+                                    .font(ItemView.Typography.description)
+                                    .lineLimit(ItemView.Typography.descriptionLineLimit)
                             }
                             .buttonStyle(.plain)
                         } largeView: {
                             Text(itemOverview)
-                                .font(.footnote)
-                                .lineLimit(3)
+                                .font(ItemView.Typography.description)
+                                .lineLimit(ItemView.Typography.descriptionLineLimit)
                         }
                     }
                 }

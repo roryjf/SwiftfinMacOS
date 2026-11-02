@@ -20,7 +20,19 @@ private struct ItemActionButtonLabelStyle: LabelStyle {
     var activeColor: Color?
 
     private var iconSize: CGFloat {
+        #if targetEnvironment(macCatalyst)
+        24
+        #else
         viewLayout.value(standard: 24, large: 40)
+        #endif
+    }
+
+    private var iconPadding: CGFloat {
+        #if targetEnvironment(macCatalyst)
+        14
+        #else
+        viewLayout.value(standard: 8, large: 16)
+        #endif
     }
 
     private var tint: Color {
@@ -42,9 +54,9 @@ private struct ItemActionButtonLabelStyle: LabelStyle {
     func makeBody(configuration: Configuration) -> some View {
         Label(configuration)
             .labelStyle(.iconOnly)
-            .font(.system(size: viewLayout.value(standard: 20, large: 30)))
+            .font(.system(size: iconSize * 0.8))
             .frame(width: iconSize, height: iconSize)
-            .padding(viewLayout.value(standard: 8, large: 16))
+            .padding(iconPadding)
             .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity)
             .backport
             .glassEffect(
@@ -183,7 +195,7 @@ struct ItemActionButtons: View {
         let hasBarMenu = viewLayout.isLarge && (overflowButtons.isNotEmpty || menuButtons.isNotEmpty)
 
         if buttons.isNotEmpty || hasBarMenu {
-            HStack(alignment: .center, spacing: viewLayout.value(standard: 8, large: 24)) {
+            HStack(alignment: .center, spacing: ItemView.Typography.buttonSpacing(viewLayout)) {
                 ForEach(buttons) { button in
                     Self.view(for: button)
                         .labelStyle(ItemActionButtonLabelStyle(activeColor: button.activeColor))
@@ -207,7 +219,7 @@ struct ItemActionButtons: View {
                     .focused(focusedButton, equals: ItemView.Component.menu)
                 }
             }
-            .frame(height: viewLayout.controlHeight)
+            .frame(height: ItemView.Typography.controlHeight(viewLayout))
             .environmentObject(provider)
             .buttonBorderShape(.capsule)
             .buttonStyle(BasicHoverButtonStyle())
@@ -249,8 +261,29 @@ extension ItemActionButtons {
         let buttons: [ItemActionButton]
         let menuButtons: [ItemActionButton]
 
+        #if targetEnvironment(macCatalyst)
+        private func section(_ group: [ItemActionButton]) -> some View {
+            let items = (buttons + menuButtons).filter { group.contains($0) }
+
+            return Group {
+                if items.isNotEmpty {
+                    Section {
+                        ForEach(items, content: ItemActionButtons.view(for:))
+                    }
+                }
+            }
+        }
+        #endif
+
         var body: some View {
             Group {
+                #if targetEnvironment(macCatalyst)
+                // Grouped by purpose, with destructive actions last.
+                section([.playback, .shuffle, .trailers, .record])
+                section([.played, .favorited])
+                section([.editMetadata, .refresh, .subtitles])
+                section([.delete])
+                #else
                 ForEach(
                     buttons,
                     content: ItemActionButtons.view(for:)
@@ -264,6 +297,7 @@ extension ItemActionButtons {
                     menuButtons,
                     content: ItemActionButtons.view(for:)
                 )
+                #endif
             }
             .environmentObject(provider)
             .withViewContext(.isInMenu)

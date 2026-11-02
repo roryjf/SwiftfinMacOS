@@ -36,6 +36,13 @@ struct SearchView: View {
     @TabItemSelected
     private var tabItemSelected
 
+    /// When provided, the query is owned by the caller's own search field.
+    private let externalQuery: Binding<String>?
+
+    init(externalQuery: Binding<String>? = nil) {
+        self.externalQuery = externalQuery
+    }
+
     private var suggestionsView: some View {
         VStack(spacing: 20) {
             ForEach(viewModel.suggestions) { item in
@@ -115,14 +122,25 @@ struct SearchView: View {
         }
         .onFirstAppear {
             viewModel.getSuggestions()
+
+            if let externalQuery {
+                searchQuery = externalQuery.wrappedValue
+            }
         }
         .onChange(of: searchQuery) {
             viewModel.search(query: searchQuery)
         }
-        .searchable(
-            text: $searchQuery,
-            prompt: L10n.search
-        )
+        .onChange(of: externalQuery?.wrappedValue ?? "") { _, newValue in
+            if externalQuery != nil {
+                searchQuery = newValue
+            }
+        }
+        .if(externalQuery == nil) { view in
+            view.searchable(
+                text: $searchQuery,
+                prompt: L10n.search
+            )
+        }
         .environmentObject(focusCoordinator)
         #if os(tvOS)
         .modifier(SearchSafeAreaModifier())

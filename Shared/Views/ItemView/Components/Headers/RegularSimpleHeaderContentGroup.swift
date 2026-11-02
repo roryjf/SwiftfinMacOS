@@ -42,7 +42,7 @@ extension ItemView {
                     }
 
                     Text(provider.item.displayTitle)
-                        .font(.largeTitle)
+                        .font(ItemView.Typography.title)
                         .fontWeight(.semibold)
                         .multilineTextAlignment(.leading)
                         .lineLimit(2)
@@ -80,12 +80,13 @@ extension ItemView {
                         title
 
                         ItemView.Description(item: provider.item)
+                            .padding(.bottom, ItemView.Typography.descriptionBottomPadding(viewLayout))
 
                         ItemView.ActionBar(
                             provider: provider,
                             alignment: .leading
                         )
-                        .frame(maxWidth: viewLayout.value(standard: 300, large: 450), alignment: .leading)
+                        .frame(maxWidth: ItemView.Typography.actionBarMaxWidth(viewLayout), alignment: .leading)
                         .if(viewLayout.isLarge) { buttons in
                             buttons
                                 .padding(.vertical)

@@ -142,6 +142,13 @@ extension VideoPlayer.UIContainerViewController {
                 VStack(alignment: .leading, spacing: 0) {
 
                     tabButtons
+                        #if targetEnvironment(macCatalyst)
+                        .overlay(alignment: .trailing) {
+                            VideoPlayer.PlaybackControls.BottomActionBar()
+                                .fixedSize()
+                                .padding(.trailing, max(viewState.supplementInsets.trailing, viewLayout.edgePadding))
+                        }
+                        #endif
 
                     SupplementTabView(
                         data: viewState.supplements,

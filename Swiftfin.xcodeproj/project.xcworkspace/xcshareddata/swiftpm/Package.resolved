@@ -2,15 +2,6 @@
   "originHash" : "44f58fdeea6e76bcce3fff6bca28ca9c80c66c1dc291bfe7237b799a94fbe046",
   "pins" : [
     {
-      "identity" : "blurhashkit",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/LePips/BlurHashKit",
-      "state" : {
-        "revision" : "19847aa26cdea6859694f6583ab41d3c4412afb6",
-        "version" : "2.0.0"
-      }
-    },
-    {
       "identity" : "cocoalumberjack",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/CocoaLumberjack/CocoaLumberjack.git",

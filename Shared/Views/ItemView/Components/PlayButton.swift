@@ -58,7 +58,7 @@ struct PlayButton: View {
                     }
                 }
             }
-            .font(.callout)
+            .font(ItemView.Typography.playButton)
             .fontWeight(.semibold)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .backport

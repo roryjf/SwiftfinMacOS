@@ -107,6 +107,7 @@ extension VideoPlayer {
                 .frame(minHeight: 44)
                 .background(.white, in: Capsule())
                 .contentShape(Capsule())
+                .hoverHighlight(Capsule(), tint: .black, opacity: 0.15)
                 .scaleEffect(isFocused && !reduceMotion ? 1.08 : 1)
                 .shadow(color: .black.opacity(isFocused ? 0.5 : 0.2), radius: isFocused ? 12 : 4)
                 .opacity(isEnabled ? (configuration.isPressed ? 0.65 : 1) : 0.5)

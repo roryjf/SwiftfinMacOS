@@ -466,6 +466,7 @@ extension VideoPlayer {
         private var isDismissing = false
         private var didInitiallyAppear: Bool = false
         private var lastSupplementLayout: (layout: ViewLayout, safeAreaInsets: UIEdgeInsets)?
+        private var lastHoverPokeTime: CFTimeInterval = 0
 
         #if os(tvOS)
         let onPressEvent = OnPressEvent()
@@ -704,7 +705,39 @@ extension VideoPlayer {
             gesture.allowedPressTypes = [NSNumber(value: UIPress.PressType.menu.rawValue)]
             view.addGestureRecognizer(gesture)
             #endif
+
+            #if targetEnvironment(macCatalyst)
+            view.addGestureRecognizer(UIHoverGestureRecognizer(target: self, action: #selector(handlePointerHover)))
+            #endif
         }
+
+        #if targetEnvironment(macCatalyst)
+        /// Moving the pointer reveals the controls, and the idle timer restarts on every movement.
+        @objc
+        private func handlePointerHover(_ recognizer: UIHoverGestureRecognizer) {
+            guard recognizer.state == .began || recognizer.state == .changed else { return }
+
+            let location = recognizer.location(in: view)
+            viewState.lastPointerLocation = location
+
+            if let anchor = viewState.pointerRevealAnchor {
+                guard hypot(location.x - anchor.x, location.y - anchor.y) > 40 else { return }
+
+                viewState.pointerRevealAnchor = nil
+            }
+
+            let now = CACurrentMediaTime()
+            guard now - lastHoverPokeTime > 0.1 else { return }
+
+            lastHoverPokeTime = now
+
+            if viewState.isPresentingControls {
+                viewState.refreshAutoDismiss()
+            } else {
+                viewState.showControls()
+            }
+        }
+        #endif
 
         // Setup player view separately after view appears to hopefully
         // prevent player playing before the view is done presenting

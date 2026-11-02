@@ -26,8 +26,66 @@ extension VideoPlayer {
         @Environment(MediaSession.self)
         private var mediaSession
 
+        @Environment(VolumeController.self)
+        private var volume: VolumeController?
+
+        @Router
+        private var router
+
         @Toaster
         private var toaster: ToastProxy
+
+        private func adjustVolume(by delta: Double) {
+            volume?.adjust(by: delta)
+        }
+
+        private func toggleMute() {
+            volume?.toggleMute()
+        }
+
+        private func toggleSubtitles() {
+            guard let playbackItem = mediaSession.playbackItem,
+                  playbackItem.subtitleStreams.contains(where: { ($0.index ?? -1) >= 0 })
+            else { return }
+
+            let enable = !playbackItem.subtitlesEnabled
+            playbackItem.setSubtitlesEnabled(enable)
+
+            toaster.present(
+                enable ? "Subtitles On" : "Subtitles Off",
+                systemName: enable ? "captions.bubble.fill" : "captions.bubble"
+            )
+        }
+
+        private func seek(toFraction fraction: Double) {
+            guard mediaSession.canSeek, let runtime = mediaSession.item.runtime, runtime > .zero else { return }
+
+            viewState.showProgress()
+            mediaSession.seek(to: runtime * fraction)
+        }
+
+        /// Closes the open panel, then hides the overlay, then leaves full screen, then closes the player.
+        private func handleEscape() {
+            if viewState.isPresentingSupplement {
+                viewState.selectedSupplementID = nil
+                return
+            }
+
+            if viewState.presentation != .hidden {
+                viewState.dismissControlsFromKeyboard()
+                return
+            }
+
+            #if targetEnvironment(macCatalyst)
+            if MacWindow.isFullScreen {
+                MacWindow.exitFullScreen()
+                return
+            }
+            #endif
+
+            mediaSession.stop()
+            router.dismiss()
+        }
 
         func body(content: Content) -> some View {
             content
@@ -187,6 +245,67 @@ extension VideoPlayer {
                             ),
                             systemName: "goforward"
                         )
+                    }
+
+                    // MARK: - Volume
+
+                    KeyCommandAction(
+                        title: "Volume Up",
+                        input: UIKeyCommand.inputUpArrow
+                    ) {
+                        adjustVolume(by: 0.05)
+                    }
+
+                    KeyCommandAction(
+                        title: "Volume Down",
+                        input: UIKeyCommand.inputDownArrow
+                    ) {
+                        adjustVolume(by: -0.05)
+                    }
+
+                    KeyCommandAction(
+                        title: "Mute",
+                        input: "m"
+                    ) {
+                        toggleMute()
+                    }
+
+                    // MARK: - Subtitles
+
+                    KeyCommandAction(
+                        title: L10n.subtitles,
+                        input: "c"
+                    ) {
+                        toggleSubtitles()
+                    }
+
+                    // MARK: - Window
+
+                    KeyCommandAction(
+                        title: "Hide Controls, Exit Full Screen or Close Player",
+                        input: UIKeyCommand.inputEscape
+                    ) {
+                        handleEscape()
+                    }
+
+                    #if targetEnvironment(macCatalyst)
+                    KeyCommandAction(
+                        title: "Toggle Full Screen",
+                        input: "f"
+                    ) {
+                        MacWindow.toggleFullScreen()
+                    }
+                    #endif
+
+                    // MARK: - Seek to Position
+
+                    for digit in 0 ..< 10 {
+                        KeyCommandAction(
+                            title: "Seek to \(digit * 10)%",
+                            input: "\(digit)"
+                        ) {
+                            seek(toFraction: Double(digit) / 10)
+                        }
                     }
                 }
         }

@@ -24,6 +24,7 @@ struct PosterHStackLibrarySection<Library: PagingLibrary>: View
 
         func makeBody(configuration: Configuration) -> some View {
             configuration.label
+                .hoverHighlight(RoundedRectangle(cornerRadius: 6))
                 .scaleEffect(configuration.isPressed ? 0.97 : 1)
                 .opacity(configuration.isPressed ? 0.8 : 1)
                 .animation(.easeOut(duration: 0.1), value: configuration.isPressed)
@@ -56,9 +57,18 @@ struct PosterHStackLibrarySection<Library: PagingLibrary>: View
             .lineLimit(1)
     }
 
+    /// Headings are plain titles on Mac, not links to a library page.
+    private var isHeaderButtonEnabled: Bool {
+        #if targetEnvironment(macCatalyst)
+        false
+        #else
+        group.environment.isHeaderButtonEnabled
+        #endif
+    }
+
     @ViewBuilder
     private var header: some View {
-        if group.environment.isHeaderButtonEnabled {
+        if isHeaderButtonEnabled {
             Button(action: routeToLibrary) {
                 if viewLayout.isLarge {
                     HStack(spacing: 3) {
@@ -101,7 +111,7 @@ struct PosterHStackLibrarySection<Library: PagingLibrary>: View
 
     @ViewBuilder
     private var sectionHeader: some View {
-        if group.environment.isHeaderButtonEnabled {
+        if isHeaderButtonEnabled {
             header
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .focusSection()

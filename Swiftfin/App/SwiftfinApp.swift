@@ -35,6 +35,10 @@ struct SwiftfinApp: App {
                 .ignoresSafeArea(.container)
             }
             .trackingFrame(for: .layoutContainer)
+            .configuresMacWindow()
+        }
+        .commands {
+            MacCommands()
         }
     }
 }

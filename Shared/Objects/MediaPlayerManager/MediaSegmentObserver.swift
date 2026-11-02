@@ -74,7 +74,10 @@ final class MediaSegmentObserver: MediaSessionObserver, VideoPlayerOverlayAction
 
         guard let segment = segments.first(where: { $0.skipTarget(at: mediaSession.seconds, duration: duration) != nil }) else { return [] }
 
-        return [VideoPlayerOverlayAction(id: segment.id, title: L10n.skip, systemImage: "forward.end.fill") { [
+        // swiftlint:disable:next hard_coded_display_string
+        let title = segment.type == .intro ? "Skip Intro" : segment.type == .outro ? "Skip Credits" : L10n.skip
+
+        return [VideoPlayerOverlayAction(id: segment.id, title: title, systemImage: "forward.end.fill") { [
             weak self,
             weak item
         ] in

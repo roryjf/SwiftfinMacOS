@@ -39,8 +39,13 @@ extension SwiftfinApp {
 
         // Nuke
 
+        #if targetEnvironment(macCatalyst)
+        ImageCache.shared.costLimit = 1024 * 1024 * 800 // 800 MB
+        ImageCache.shared.ttl = 3600 // 1 hour
+        #else
         ImageCache.shared.costLimit = 1024 * 1024 * 200 // 200 MB
         ImageCache.shared.ttl = 300 // 5 min
+        #endif
 
         ImageDecoderRegistry.shared.register { context in
             guard let mimeType = context.urlResponse?.mimeType else { return nil }
